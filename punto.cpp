@@ -78,18 +78,19 @@ int main(int argc, char *args[])
     {
         if (!(transmissionStartedSend || transmissionStartedReceive))
         {
+            printMenu();
+            printf("3s timeout \n");
             struct pollfd mypoll = {STDIN_FILENO, POLLIN | POLLPRI};
-            char string[10];
-            if (poll(&mypoll, 1, 2000))
+            if (poll(&mypoll, 1, 3000))
             {
-                scanf("%9s", string);
-                printf("Read string - %s\n", string);
+                scanf("%d", &option);
+                printf("Read string - %d\n", option);
             }
             else
             {
                 puts("Read nothing");
             }
-            delay(5000);
+            delay(3000);
             if (option == 1)
             {
                 prepareTransmissionOfTemperature(slipArrayToSend, macOrigin, macDestiny, ethernet, frame);
