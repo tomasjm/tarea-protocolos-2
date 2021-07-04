@@ -14,8 +14,9 @@ struct Ethernet {
 };
 
 void packEthernet(Ethernet &eth);
-void unpackEthernet(Ethernet &eth);
+bool unpackEthernet(Ethernet &eth);
 void convertMacAddressToByteArray(char strMac[18], BYTE mac[]);
 void printMacAddress(BYTE* mac);
 bool compareMacAddress(BYTE* mac1,BYTE* mac2);
+int fcs(BYTE* arr, int len);
 #endif

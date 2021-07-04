@@ -113,10 +113,21 @@ void generateRawFrame(Frame &f, int cmd, int sa, int length, BYTE data[]) {
   generateFrameToSend(f);
 }
 
-void getFrameFromTransmission(BYTE slipArray[], Frame &f) {
+bool getFrameFromTransmission(BYTE slipArray[], Frame &f) {
   Ethernet aux;
   desempaquetaSlip(aux.frame, slipArray);
-  unpackEthernet(aux);
+  bool error = unpackEthernet(aux);
+  if (error) {
+    return false;
+  }
   memcpy(f.frame, aux.data, sizeof(f.frame));
   generateReceivedFrame(f);
+  return true;
+}
+
+void printByteArray(BYTE* arr, int len){
+  for(int i = 0; i<len; i++){
+    printf("0x%x ", arr[i]);
+  }
+  printf("\n");
 }

@@ -27,5 +27,7 @@ void getMessageFromTextMessageFrame(Frame &f, char msg[]);
 void generateRawEthernet(Ethernet &ethf, Frame &f, char strMacSource[18], char strMacDestiny[18]);
 void generateRawFrame(Frame &f, int cmd, int sa, int length, BYTE data[]);
 
-void getFrameFromTransmission(BYTE slipArray[], Frame &f);
+bool getFrameFromTransmission(BYTE slipArray[], Frame &f);
+
+void printByteArray(BYTE* arr, int len)
 #endif

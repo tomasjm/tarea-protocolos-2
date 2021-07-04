@@ -15,23 +15,33 @@ void packEthernet(Ethernet &eth) {
   for (int i = 0; i<eth.length; i++) {
     eth.frame[i+14] = eth.data[i];
   }
+  eth.fcs = 0;
+  eth.fcs = fcs(eth.frame, 14+eth.length);
   for(int i=0;i<4;i++){
 		eth.frame[14+eth.length+i] = (eth.fcs>>(8*i))&0xFF;
 	}
 }
 
-void unpackEthernet(Ethernet &eth) {
+bool unpackEthernet(Ethernet &eth) {
+  eth.length = ((eth.frame[13]&0xFF)<<8) | eth.frame[12] & 0xFF;
+  eth.fcs = 0;
+  int checkFcs = fcs(eth.frame, 14+eth.length);
+  for (int i = 0; i<4; i++) {
+    eth.fcs |= (eth.frame[14+eth.length+i] << (i*8));
+  }
+  if (eth.fcs != checkFcs) {
+    return false;
+  } 
   for (int i = 0; i<6; i++) {
     eth.source[i] = (eth.frame[i]);  
     eth.destiny[i] = (eth.frame[i+6]);  
   }
-  eth.length = ((eth.frame[13]&0xFF)<<8) | eth.frame[12] & 0xFF;
+  
   for (int i = 0; i<129; i++) {
     eth.data[i] = eth.frame[i+14];
   }
-  for (int i = 0; i<4; i++) {
-    eth.fcs |= (eth.frame[14+eth.length+i] << (i*8));
-  }
+  return true;
+
 }
 
 void convertMacAddressToByteArray(char strMac[], BYTE mac[]) {
@@ -51,4 +61,15 @@ bool compareMacAddress(BYTE* mac1, BYTE* mac2){
 	}
 
   return true;
+}
+
+int fcs(BYTE* arr, int len){
+
+  int sumBits = 0;
+  for(int i = 0; i<len; i++){
+    for(int nbit = 0; nbit<8; nbit++){
+      sumBits += (arr[i] >> nbit) & 0x01;
+    }
+  }
+  return sumBits;
 }
