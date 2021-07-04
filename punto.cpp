@@ -26,6 +26,8 @@ BYTE len = 10;
 int nones = 0;
 bool transmissionStartedSend = false;
 int endCount = 0;
+Ethernet ethernet;
+Frame frame;
 
 char macDestiny[18];
 
@@ -76,12 +78,12 @@ int main(int argc, char *args[])
             getOptionAndValidate(&option);
             if (option == 1)
             {
-                prepareTransmissionOfTemperature(slipArrayToSend, MAC_ADDRESS, MAC_ADDRESS, ethernet, frame);
+                prepareTransmissionOfTemperature(slipArrayToSend, macOrigin, macDestiny, ethernet, frame);
                 startTransmission();
             }
             if (option == 2)
             {
-                prepareTransmissionOfTextMessage(slipArrayToSend, MAC_ADDRESS, MAC_ADDRESS, ethernet, frame);
+                prepareTransmissionOfTextMessage(slipArrayToSend, macOrigin, macDestiny, ethernet, frame);
                 startTransmission();
             }
             if (option == 3)
