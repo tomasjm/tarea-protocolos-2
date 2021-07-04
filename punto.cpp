@@ -80,7 +80,7 @@ int main(int argc, char *args[])
         {
             printMenu();
             struct pollfd mypoll = {STDIN_FILENO, POLLIN | POLLPRI};
-            if (poll(&mypoll, 1, 1000))
+            if (poll(&mypoll, 1, 3000))
             {
                 scanf("%d", &option);
             }
@@ -122,6 +122,8 @@ int main(int argc, char *args[])
         }
         if (boolReceivedFrame)
         {
+            printByteArray(slipArrayReceived, sizeof(slipArrayReceived));
+            delay(10000);
             error = getFrameFromTransmission(slipArrayReceived, receivedFrame);
             if (error)
             {
@@ -131,6 +133,7 @@ int main(int argc, char *args[])
             }
             else
             {
+                printf("CMD: %d\n", receivedFrame.cmd);
                 if (receivedFrame.cmd == 1)
                 {
                     printf("RECIBIDA TELEMETRIA\n");
