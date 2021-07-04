@@ -142,6 +142,7 @@ void processBit(bool level)
     //Verifica si comienza transmisión
     if (!transmissionStartedReceive && slipArrayReceived[nbytesReceive] == 0xC0)
     {
+        printf("recibiendo datos...\n");
         transmissionStartedReceive = true;
         nbitsReceive = 0;
         nbytesReceive++;
