@@ -77,7 +77,7 @@ int main(int argc, char *args[])
     {
         if (!(transmissionStartedSend || transmissionStartedReceive))
         {
-            BYTE boption[];
+            BYTE boption[2];
             printMenu();
             fflush(stdout);
             int in = fileno(stdin);
