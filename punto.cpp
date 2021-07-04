@@ -68,7 +68,7 @@ int main(int argc, char *args[])
   //CONFIGURA PINES DE ENTRADA SALIDA
   pinMode(RX_PIN_RECEIVE, INPUT);
   pinMode(TX_PIN_RECEIVE, OUTPUT);
-  pinMode(RX_PIN_SEND INPUT);
+  pinMode(RX_PIN_SEND, INPUT);
   pinMode(TX_PIN_SEND, OUTPUT);
 
   int option = 0;
