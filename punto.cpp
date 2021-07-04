@@ -8,11 +8,11 @@
 #include "menu/menu.h"
 #include "helpers/helpers.h"
 
-#define MAX_TRANSFER_SIZE 300 
-// ETHERNET_SIZE*2+2
+#define MAX_TRANSFER_SIZE 300
 
-void processBit(bool level);
+
 void cb(void);
+void processBit(bool level);
 
 int clockPin;
 int txPin;
