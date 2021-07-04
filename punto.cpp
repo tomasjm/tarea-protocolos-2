@@ -10,10 +10,6 @@
 
 #define MAX_TRANSFER_SIZE 300
 
-
-void cb(void);
-void processBit(bool level);
-
 int clockPin;
 int txPin;
 int rxPin;
@@ -45,6 +41,8 @@ Frame receivedFrame;
 char macOrigin[18];
 
 void startTransmission();
+void cb(void);
+void processBit(bool level);
 
 int main(int argc, char *args[])
 {
