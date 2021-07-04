@@ -8,7 +8,8 @@
 #include "menu/menu.h"
 #include "helpers/helpers.h"
 
-#define MAX_TRANSFER_SIZE 300 // ETHERNET_SIZE*2+2
+#define MAX_TRANSFER_SIZE 300 
+// ETHERNET_SIZE*2+2
 
 void processBit(bool level);
 void cb(void);
@@ -47,7 +48,7 @@ void startTransmission();
 
 int main(int argc, char *args[])
 {
-    if (arc >= 6) {
+    if (argc >= 6) {
         memcpy(macOrigin, args[1], sizeof(macOrigin));
         memcpy(macDestiny, args[2], sizeof(macDestiny));
         clockPin = atoi(args[3]);
