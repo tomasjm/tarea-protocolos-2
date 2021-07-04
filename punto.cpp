@@ -7,7 +7,8 @@
 #include "slip/slip.h"
 #include "menu/menu.h"
 #include "helpers/helpers.h"
-#include "serial/serial.h"
+#include <unistd.h>
+#include <poll.h>
 
 #define MAX_TRANSFER_SIZE 300
 #define BYTE unsigned char
@@ -77,14 +78,17 @@ int main(int argc, char *args[])
     {
         if (!(transmissionStartedSend || transmissionStartedReceive))
         {
-            BYTE boption[2];
-            printMenu();
-            fflush(stdout);
-            int in = fileno(stdin);
-            int n = readPort(in, boption, 2, 5000);
-            //option = atoi(boption);
-            printf("BOPTION %s\n", boption);
-            boption[n-1] = '\0';
+            struct pollfd mypoll = {STDIN_FILENO, POLLIN | POLLPRI};
+            char string[10];
+            if (poll(&mypoll, 1, 2000))
+            {
+                scanf("%9s", string);
+                printf("Read string - %s\n", string);
+            }
+            else
+            {
+                puts("Read nothing");
+            }
             delay(5000);
             if (option == 1)
             {
