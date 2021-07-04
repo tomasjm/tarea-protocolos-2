@@ -29,5 +29,5 @@ void generateRawFrame(Frame &f, int cmd, int sa, int length, BYTE data[]);
 
 bool getFrameFromTransmission(BYTE slipArray[], Frame &f);
 
-void printByteArray(BYTE* arr, int len)
+void printByteArray(BYTE* arr, int len);
 #endif
