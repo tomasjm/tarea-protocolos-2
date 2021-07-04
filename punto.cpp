@@ -77,13 +77,13 @@ int main(int argc, char *args[])
     {
         if (!(transmissionStartedSend || transmissionStartedReceive))
         {
-            BYTE boption;
+            BYTE boption[];
             printMenu();
             fflush(stdout);
             int in = fileno(stdin);
-            int n = readPort(in, boption, 1, 5000);
-            option = atoi(boption);
-            printf("OPTION %d\n", option);
+            int n = readPort(in, boption, 2, 5000);
+            //option = atoi(boption);
+            printf("BOPTION %s\n", boption);
             delay(5000);
             if (option == 1)
             {
