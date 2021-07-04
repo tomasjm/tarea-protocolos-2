@@ -84,7 +84,7 @@ int main(int argc, char *args[])
     for (int i = 0; i<argc; i++) {
         printf("arg %s i=%d\n", args[i], i);
     }
-    if (atoi(args[1]) == 1)
+    if (argc > 1 && atoi(args[1]) == 1)
     {
         empaquetaSlip(slipArrayToSend, bytesToSend, 10);
         printf("Paquete slip: ");
