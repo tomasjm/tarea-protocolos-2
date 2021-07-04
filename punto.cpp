@@ -82,7 +82,7 @@ int main(int argc, char *args[])
     pinMode(RX_PIN_SEND, INPUT);
     pinMode(TX_PIN_SEND, OUTPUT);
     for (int i = 0; i<argc; i++) {
-        printf("%s \n", args[i]);
+        printf("arg %s i=%d\n", args[i], i);
     }
     if (args[1] == "1")
     {
