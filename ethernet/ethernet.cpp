@@ -64,7 +64,6 @@ bool compareMacAddress(BYTE* mac1, BYTE* mac2){
 }
 
 int fcs(BYTE* arr, int len){
-
   int sumBits = 0;
   for(int i = 0; i<len; i++){
     for(int nbit = 0; nbit<8; nbit++){

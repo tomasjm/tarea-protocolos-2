@@ -3,6 +3,7 @@
 
 #include "../ethernet/ethernet.h"
 #include "../protocol/protocol.h"
+#include "../slip/slip.h"
 
 #define BYTE unsigned char
 
