@@ -3,7 +3,7 @@
 #include <wiringPi.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "slip.h"
+#include "slip/slip.h"
 #include <string.h>
 
 //MACROS
