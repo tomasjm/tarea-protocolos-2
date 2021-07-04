@@ -138,7 +138,7 @@ int main(int argc, char *args[])
                     int timestamp = 0;
                     getValuesFromTemperatureFrame(receivedFrame, &temp, &timestamp);
                     printf("----- TELEMETRY RECEIVED -----\n");
-                    printf("Temperature: %d \n", temperature);
+                    printf("Temperature: %d \n", temp);
                     printf("Timestamp: %d \n", timestamp);
                     delay(5000);
                 }
