@@ -40,7 +40,7 @@ typedef enum
   RECEIVING,
   IDLE
 } TRANSMISION_TYPE;
-TRANSMISION_TYPE transmissionType = RECEIVING;
+TRANSMISION_TYPE transmissionType = IDLE;
 void startTransmission();
 
 int main(int argc, char *args[])
