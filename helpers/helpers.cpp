@@ -112,7 +112,7 @@ void generateRawFrame(Frame &f, int cmd, int sa, int length, BYTE data[]) {
   generateFrameToSend(f);
 }
 
-bool getFrameFromTransmission(BYTE slipArray[], Frame &f, Ethernet &ef) {
+bool getFrameFromTransmission(BYTE slipArray[], Frame &f) {
   int n = desempaquetaSlip(ef.frame, slipArray);
   bool error = unpackEthernet(ef);
   if (error) {
