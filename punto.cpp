@@ -222,3 +222,7 @@ void processBit(bool level)
         }
     }
 }
+
+void startTransmission() {
+  transmissionStarted = true;
+}
