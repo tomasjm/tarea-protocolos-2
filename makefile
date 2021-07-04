@@ -5,7 +5,8 @@ all:
 	g++ -Wall -c menu/menu.cpp
 	g++ -Wall -c ethernet/ethernet.cpp
 	g++ -Wall -c slip/slip.cpp
-	g++ -Wall -o punto punto.o ethernet.o menu.o protocol.o slip.o helpers.o -lwiringPi
+	g++ -Wall -c serial/serial.cpp
+	g++ -Wall -o punto punto.o ethernet.o menu.o protocol.o slip.o helpers.o serial.o -lwiringPi
 test:
 	g++ -Wall -c punto.cpp -lwiringPi
 	g++ -Wall -c ethernet/ethernet.cpp

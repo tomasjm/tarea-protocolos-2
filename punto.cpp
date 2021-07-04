@@ -7,6 +7,7 @@
 #include "slip/slip.h"
 #include "menu/menu.h"
 #include "helpers/helpers.h"
+#include "serial/serial.h"
 
 #define MAX_TRANSFER_SIZE 300
 #define BYTE unsigned char
@@ -76,8 +77,14 @@ int main(int argc, char *args[])
     {
         if (!(transmissionStartedSend || transmissionStartedReceive))
         {
+            BYTE boption;
             printMenu();
-            getOptionAndValidate(&option);
+            fflush(stdout);
+            int in = fileno(stdin);
+            int n = readPort(in, boption, 1, 5000);
+            option = atoi(boption);
+            printf("OPTION %d\n", option);
+            delay(5000);
             if (option == 1)
             {
                 prepareTransmissionOfTemperature(slipArrayToSend, macOrigin, macDestiny, ethernet, frame);
