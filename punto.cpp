@@ -11,15 +11,16 @@
 #define MAX_TRANSFER_SIZE 149
 
 #define CLOCK_PIN_SEND 0
-#define TX_PIN_RECEIVE 2
-#define RX_PIN_RECEIVE 3
+#define TX_PIN_SEND 2
+#define RX_PIN_SEND 3
 
 #define CLOCK_PIN_RECEIVE 23
 #define TX_PIN_RECEIVE 22
 #define RX_PIN_RECEIVE 21
 
 void processBit(bool level);
-void cb(void);
+void cbSend(void);
+void cbReceive(void);
 
 volatile int nbits = 0;
 volatile int nbytes = 0;
