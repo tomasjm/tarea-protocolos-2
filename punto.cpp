@@ -62,6 +62,7 @@ int main(int argc, char *args[])
     //pin config
     pinMode(rxPin, INPUT);
     pinMode(txPin, OUTPUT);
+    printf("Pines clock: %d | tx: %d | rx: %d\n", clockPin, txPin, rxPin);
 
     // CONFIGURE INTERRUPT FOR SENDING AND RECEIVING DATA
     if (wiringPiISR(clockPin, INT_EDGE_BOTH, &cb) < 0)
