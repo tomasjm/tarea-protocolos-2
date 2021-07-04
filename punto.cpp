@@ -57,7 +57,7 @@ int main(int argc, char *args[])
   //CONFIGURA PINES DE ENTRADA SALIDA
   pinMode(RX_PIN, INPUT);
   pinMode(TX_PIN, OUTPUT);
-
+  int option = 0;
   while (true) {
     if (transmissionType == IDLE) {
       printMenu();
@@ -78,8 +78,9 @@ int main(int argc, char *args[])
       printf("receiving data...\n");
       while(waitForFrame)
         continue;
-      int len = desempaquetaSlip(data, slipFrame);
-  
+      BYTE data[50];
+      int len = desempaquetaSlip(data, slipArrayReceived);
+
       printf("\nData:\n");
       for(int i = 0; i<len; i++){
         printf("Byte %d: %d\n", i, data[i]);
