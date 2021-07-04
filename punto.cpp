@@ -117,12 +117,11 @@ int main(int argc, char *args[])
         while (transmissionStartedReceive)
         {
             clearScreen();
-            printf("Receiving data... % bytes\n", nbytesReceived);
+            printf("Receiving data... %d\n", nbytesReceived);
             delay(1000);
         }
         if (boolReceivedFrame)
         {
-            printByteArray(slipArrayReceived, sizeof(slipArrayReceived));
             delay(10000);
             error = getFrameFromTransmission(slipArrayReceived, receivedFrame);
             if (error)
@@ -133,20 +132,27 @@ int main(int argc, char *args[])
             }
             else
             {
-                printf("CMD: %d\n", receivedFrame.cmd);
                 if (receivedFrame.cmd == 1)
                 {
-                    printf("RECIBIDA TELEMETRIA\n");
+                    int temp = 0;
+                    int timestamp = 0;
+                    getValuesFromTemperatureFrame(receivedFrame, &temp, &timestamp);
+                    printf("----- TELEMETRY RECEIVED -----\n");
+                    printf("Temperature: %d \n", temperature);
+                    printf("Timestamp: %d \n", timestamp);
                     delay(5000);
                 }
                 else if (receivedFrame.cmd == 2)
                 {
-                    printf("RECIBIDO MENSAJE DE TEXTO\n");
+                    char msg[30];
+                    getMessageFromTextMessageFrame(receivedFrame, msg);
+                    printf("----- TEXT MESSAGE RECEIVED -----\n");
+                    printf("Message: %s \n", msg);
                     delay(5000);
                 }
                 else
                 {
-                    printf("RECIBIDO CMD DESCONOCIDO\n");
+                    printf("We have received an unknown CMD value, probably an error...\n");
                     delay(5000);
                 }
             }
