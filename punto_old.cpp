@@ -22,7 +22,7 @@ void processBit(bool level);
 void cbSend(void);
 void cbReceive(void);
 
-volatile int nbits = 0;
+volatile int nbitsSend, nbitsReceive = 0;
 volatile int nbytes = 0;
 int endCount = 0;
 BYTE bytes[10] = {1,2,3,4,5,6,7,8,9,10};
@@ -38,7 +38,9 @@ Frame frame, receivedFrame;
 
 bool waitForFrame = true;
 
-bool transmissionStarted = false;
+bool transmissionStartedSend = false;
+
+bool transmissionStartedReceive = false;
 typedef enum
 {
   SENDING,
@@ -52,136 +54,132 @@ void startTransmission();
 
 int main(int argc, char *args[])
 {
-  //INICIA WIRINGPI
   if (wiringPiSetup() == -1)
-    exit(1);
+    {
+        printf("No fue posible iniciar wiring pi\n");
+        exit(1);
+    }
+    piHiPri(99);
+    //CONFIGURA PINES DE ENTRADA SALIDA
 
-  //CONFIGURA INTERRUPCION PIN CLOCK (PUENTEADO A PIN PWM)
-  if (wiringPiISR(CLOCK_PIN_SEND, INT_EDGE_RISING, &cbSend) < 0)
-  {
-    printf("Unable to start interrupt function\n");
-  }
-  if (wiringPiISR(CLOCK_PIN_RECEIVE, INT_EDGE_RISING, &cbReceive) < 0)
-  {
-    printf("Unable to start interrupt function\n");
-  }
-  //CONFIGURA PINES DE ENTRADA SALIDA
-  pinMode(RX_PIN_RECEIVE, INPUT);
-  pinMode(TX_PIN_RECEIVE, OUTPUT);
-  pinMode(RX_PIN_SEND, INPUT);
-  pinMode(TX_PIN_SEND, OUTPUT);
+    //CONFIGURA INTERRUPCION PIN CLOCK (PUENTEADO A PIN PWM)
+    if (wiringPiISR(CLOCK_PIN_RECEIVE, INT_EDGE_FALLING, &cbReceive) < 0)
+    {
+        printf("Unable to start interrupt function\n");
+    }
 
-  int option = 0;
-  while (true) {
-    if (transmissionType == IDLE) {
-      printMenu();
-      getOptionAndValidate(&option);
-    if (option == 0)
-      continue;
-    if (option == 1) {
-      empaquetaSlip(slipArrayToSend, bytes, 10);
-      startTransmission();
-    } else if (option == 3) {
-      exit(1);
+    if (wiringPiISR(CLOCK_PIN_SEND, INT_EDGE_RISING, &cbSend) < 0)
+    {
+        printf("Unable to start interrupt function\n");
     }
-    }
-    if (transmissionType == SENDING) {
-      printf("sending data...\n");
-      delay(1000);
-    }
-    if (transmissionType == RECEIVING) {
-      printf("receiving data...\n");
-      while(waitForFrame)
-        delay(1000);
-      BYTE data[50];
-      int len = desempaquetaSlip(data, slipArrayReceived);
 
-      printf("\nData:\n");
-      for(int i = 0; i<len; i++){
-        printf("Byte %d: %d\n", i, data[i]);
-      }
-      delay(20000);
-    }
-  }
+    pinMode(RX_PIN_RECEIVE, INPUT);
+    pinMode(TX_PIN_RECEIVE, OUTPUT);
+
+    pinMode(RX_PIN_SEND, INPUT);
+    pinMode(TX_PIN_SEND, OUTPUT);
+
+  
   return 0;
 }
-void startTransmission() {
-  transmissionType = SENDING;
-  transmissionStarted = true;
+void cbReceive(void)
+{
+    bool level = digitalRead(RX_PIN_RECEIVE);
+    processBit(level);
 }
 
-void cbReceive(void){
-  bool level = digitalRead(RX_PIN_RECEIVE);
-  processBit(level);
-}
+void processBit(bool level)
+{
+    //Inserta nuevo bit en byte actual
+    BYTE pos = nbitsReceive;
+    if (nbitsReceive > 7)
+    {
+        pos = 7;
+        slipArrayReceived[nbytes] = slipArrayReceived[nbytes] >> 1;
+        slipArrayReceived[nbytes] &= 0x7f;
+    }
+    slipArrayReceived[nbytes] |= level << pos;
 
-void processBit(bool level) {
-  //Inserta nuevo bit en byte actual
-  BYTE pos = nbits;
-  if(nbits>7){
-    pos = 7;
-    slipArrayReceived[nbytes] = slipArrayReceived[nbytes] >> 1;
-    slipArrayReceived[nbytes] &= 0x7f;
-  }
-  slipArrayReceived[nbytes] |= level << pos;
-
-  //Verifica si comienza transmisión
-  if(!transmissionStarted && slipArrayReceived[nbytes] == 0xC0){
-    transmissionStarted = true;
-    nbits = 0;
-    nbytes++;
-    // printf("Encuentra 0xc0\n");
-    return;
-  }
-
-  //Actualiza contadores y banderas
-  nbits++;
-  if(transmissionStarted){
-    if(nbits==8){
-      nbits = 0;
-      if(slipArrayReceived[nbytes] == 0xC0 && nbytes>0){
-        transmissionStarted = false;
-        //memcpy((void*)slipFrame, (void*)bytes, nbytes+1);
-        nbytes = 0;
-        waitForFrame = false;
-        transmissionType = IDLE;
+    //Verifica si comienza transmisión
+    if (!transmissionStartedReceive && slipArrayReceived[nbytes] == 0xC0)
+    {
+        transmissionStartedReceive = true;
+        nbitsReceive = 0;
+        nbytes++;
+        // printf("Encuentra 0xc0\n");
         return;
-      }
-      nbytes++;
     }
-  }
+
+    //Actualiza contadores y banderas
+    nbitsReceive++;
+    if (transmissionStartedReceive)
+    {
+        if (nbitsReceive == 8)
+        {
+            nbitsReceive = 0;
+            // printf("0x%x\n", slipArrayReceived[nbytes]);
+            if (slipArrayReceived[nbytes] == 0xC0 && nbytes > 0)
+            {
+                transmissionStartedReceive = false;
+                memcpy((void *)slipFrame, (void *)bytes, nbytes + 1);
+                nbytes = 0;
+                frameReceived = true;
+                return;
+            }
+            nbytes++;
+        }
+    }
 }
 
-void cbSend(void){
-  if(transmissionStarted){
-    if(endCount == 0 && slipArrayToSend[nbytes] != 0xC0){
-      nbytes++;
-      return;
+void cbSend(void)
+{
+    if (transmissionStartedSend)
+    {
+        if (endCount == 0 && slipArrayToSend[nbytes] != 0xC0)
+        {
+            nbytes++;
+            return;
+        }
+
+        //Escribe en el pin TX
+        digitalWrite(TX_PIN_SEND, (slipArrayToSend[nbytes] >> nbitsSend) & 0x01); //Bit de dato
+
+        //Actualiza contador de bits
+        nbitsSend++;
+
+        //Actualiza contador de bytes
+        if (nbitsSend == 8)
+        {
+            nbitsSend = 0;
+            endCount += slipArrayToSend[nbytes] == 0xC0;
+            //Finaliza la comunicación
+            if (slipArrayToSend[nbytes] == 0xC0 && endCount > 1)
+            {
+                endCount = 0;
+                nbytes = 0;
+                transmissionStartedSend = false;
+                return;
+            }
+            nbytes++;
+        }
     }
-
-    //Escribe en el pin TX
-    digitalWrite(TX_PIN_SEND, (slipArrayToSend[nbytes] >> nbits) & 0x01); //Bit de dato
-
-    //Actualiza contador de bits
-    nbits++;
-
-    //Actualiza contador de bytes
-    if(nbits == 8){
-      nbits = 0;
-      endCount += slipArrayToSend[nbytes] == 0xC0;
-      //Finaliza la comunicación
-      if(slipArrayToSend[nbytes] == 0xC0 && endCount>1){
-        endCount = 0;
-        nbytes = 0;
-        transmissionStarted = false;
-        transmissionType = IDLE;
-        return;
-      }
-      nbytes++;      
+    else
+    {
+        //Canal en reposo
+        digitalWrite(TX_PIN_SEND, 1);
     }
-  }else{
-    //Canal en reposo
-    digitalWrite(TX_PIN_SEND, 1);
-  }
 }
 
+void startTransmission()
+{
+    transmissionStartedSend = true;
+}
+
+void printByteArray(BYTE *arr, int len)
+{
+    for (int i = 0; i < len; i++)
+    {
+        printf("0x%x ", arr[i]);
+    }
+    printf("\n");
+}
