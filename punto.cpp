@@ -92,8 +92,11 @@ int main(int argc, char *args[])
 
         //TRANSMITE EL MENSAJE
         startTransmission();
-        while (transmissionStartedSend)
+        while (transmissionStartedSend) {
             printf("Sending data... %d bytes\n", nbytesSend);
+            delay(1000);
+        }
+            
     }
     else
     {
