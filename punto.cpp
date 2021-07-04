@@ -32,6 +32,7 @@ bool transmissionStarted = false;
 bool frameReceived = false;
 BYTE bytes[50];
 BYTE slipFrame[50];
+int endCount = 0;
 
 int main(){
   if(wiringPiSetup() == -1){
@@ -43,11 +44,11 @@ int main(){
 
 
   //CONFIGURA INTERRUPCION PIN CLOCK (PUENTEADO A PIN PWM)
-  if(wiringPiISR(CLOCK_PIN_RECEIVE, INT_EDGE_FALLING, &cb) < 0){
+  if(wiringPiISR(CLOCK_PIN_RECEIVE, INT_EDGE_FALLING, &cbReceive) < 0){
     printf("Unable to start interrupt function\n");
   }
 
-  if(wiringPiISR(CLOCK_PIN_SEND, INT_EDGE_RISING, &cb) < 0){
+  if(wiringPiISR(CLOCK_PIN_SEND, INT_EDGE_RISING, &cbSend) < 0){
     printf("Unable to start interrupt function\n");
   }
 
