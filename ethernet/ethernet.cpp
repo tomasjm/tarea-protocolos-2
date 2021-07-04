@@ -30,17 +30,17 @@ bool unpackEthernet(Ethernet &eth) {
     eth.fcs |= (eth.frame[14+eth.length+i] << (i*8));
   }
   if (eth.fcs != checkFcs) {
-    return false;
+    return true;
   } 
   for (int i = 0; i<6; i++) {
     eth.source[i] = (eth.frame[i]);  
     eth.destiny[i] = (eth.frame[i+6]);  
   }
   
-  for (int i = 0; i<129; i++) {
+  for (int i = 0; i<eth.length; i++) {
     eth.data[i] = eth.frame[i+14];
   }
-  return true;
+  return false;
 
 }
 

@@ -58,7 +58,7 @@ void prepareTransmissionOfTemperature(BYTE slipArray[], char strMacSource[18], c
   }
   generateRawFrame(f, 1, 0, 8, dataFrameToSend);
   generateRawEthernet(ethf, f, strMacSource, strMacDestiny);
-  empaquetaSlip(slipArray, ethf.frame, sizeof(ethf.frame));
+  empaquetaSlip(slipArray, ethf.frame, 28);
 }
 
 void prepareTransmissionOfTextMessage(BYTE slipArray[], char strMacSource[18], char strMacDestiny[18], Ethernet &ethf, Frame &f) {
@@ -67,7 +67,7 @@ void prepareTransmissionOfTextMessage(BYTE slipArray[], char strMacSource[18], c
   getTextMessage((char*)msg, 30);
   generateRawFrame(f, 2, 0, 30, msg);
   generateRawEthernet(ethf, f, strMacSource, strMacDestiny);
-  empaquetaSlip(slipArray, ethf.frame, sizeof(ethf.frame));
+  empaquetaSlip(slipArray, ethf.frame, 50);
 }
 
 void getTextMessage(char msg[], int length) {
@@ -99,9 +99,8 @@ void generateRawEthernet(Ethernet &ethf, Frame &f, char strMacSource[18], char s
   convertMacAddressToByteArray(strMacDestiny, macDestiny);
   memcpy(ethf.source, macSource, sizeof(ethf.source));
   memcpy(ethf.destiny, macDestiny, sizeof(ethf.destiny));
-  ethf.length = sizeof(f.frame);
+  ethf.length = 2+f.length;
   memcpy(ethf.data, f.frame, sizeof(ethf.data));
-  ethf.fcs = 37;
   packEthernet(ethf);
 }
 
@@ -113,16 +112,17 @@ void generateRawFrame(Frame &f, int cmd, int sa, int length, BYTE data[]) {
   generateFrameToSend(f);
 }
 
-bool getFrameFromTransmission(BYTE slipArray[], Frame &f) {
-  Ethernet aux;
-  desempaquetaSlip(aux.frame, slipArray);
-  bool error = unpackEthernet(aux);
+bool getFrameFromTransmission(BYTE slipArray[], Frame &f, Ethernet &ef) {
+  int n = desempaquetaSlip(ef.frame, slipArray);
+  bool error = unpackEthernet(ef);
   if (error) {
-    return false;
+    printf("error\n");
+    return true;
   }
-  memcpy(f.frame, aux.data, sizeof(f.frame));
+  printByteArray(ef.data, 34);
+  memcpy(f.frame, ef.data, sizeof(f.frame));
   generateReceivedFrame(f);
-  return true;
+  return false;
 }
 
 void printByteArray(BYTE* arr, int len){
