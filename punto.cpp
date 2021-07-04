@@ -12,8 +12,8 @@
 #define RX_PIN_RECEIVE          21
 
 #define CLOCK_PIN_SEND 0
-#define TX_PIN 2
-#define RX_PIN 3
+#define TX_PIN_SEND 2
+#define RX_PIN_SEND 3
 
 #define BYTE unsigned char
 
