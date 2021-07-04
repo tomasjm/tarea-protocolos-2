@@ -84,6 +84,7 @@ int main(int argc, char *args[])
             int n = readPort(in, boption, 2, 5000);
             //option = atoi(boption);
             printf("BOPTION %s\n", boption);
+            boption[n-1] = "\0";
             delay(5000);
             if (option == 1)
             {
