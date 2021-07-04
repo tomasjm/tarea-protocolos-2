@@ -21,12 +21,13 @@
 void processBit(bool level);
 void cbSend(void);
 void cbReceive(void);
+void printByteArray(BYTE *arr, int len);
 
 volatile int nbitsSend, nbitsReceive = 0;
 volatile int nbytesSend, nbytesReceive = 0;
 
 int endCount = 0;
-BYTE bytes[10] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+BYTE bytesToSend[10] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 
 char MAC_ADDRESS[18] = "b8:27:eb:15:b1:ca";
 char MAC_ADDRESS2[18] = "11:27:bb:44:b1:ca";
@@ -35,7 +36,7 @@ BYTE slipArrayToSend[MAX_TRANSFER_SIZE];
 BYTE slipArrayReceived[MAX_TRANSFER_SIZE];
 
 Ethernet ethernet;
-Frame frame, receivedFrame;
+//Frame frame, receivedFrame;
 
 bool waitForFrame = true;
 bool receivedFrame = false;
@@ -81,7 +82,7 @@ int main(int argc, char *args[])
     pinMode(RX_PIN_SEND, INPUT);
     pinMode(TX_PIN_SEND, OUTPUT);
 
-    if (args[1] == 1)
+    if (args[1] == "1")
     {
         empaquetaSlip(slipArrayToSend, bytesToSend, 10);
         printf("Paquete slip: ");
@@ -102,9 +103,9 @@ int main(int argc, char *args[])
         BYTE data[50];
         for (int i = 0; i < 50; i++)
         {
-            printf("Byte %d: 0x%x\n", i, slipFrame[i]);
+            printf("Byte %d: 0x%x\n", i, slipArrayReceived[i]);
         }
-        int len = desempaquetaSlip(data, slipFrame);
+        int len = desempaquetaSlip(data, slipArrayReceived);
 
         printf("\nData:\n");
         for (int i = 0; i < len; i++)
