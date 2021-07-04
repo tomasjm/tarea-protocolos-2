@@ -11,13 +11,6 @@
 #define MAX_TRANSFER_SIZE 300
 #define BYTE unsigned char
 
-void cb(void);
-void processBit(bool level);
-
-int clockPin;
-int txPin;
-int rxPin;
-
 // GLOBAL VARS FOR SENDING PURPOSES
 volatile int nbitsSend = 0;
 BYTE bytesToSend[10] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
@@ -32,7 +25,6 @@ Frame frame;
 
 char macDestiny[18];
 
-
 // GLOBAL VARS FOR RECEIVING PURPOSES
 volatile int nbitsReceived = 0;
 volatile int nbytesReceived = 0;
@@ -44,11 +36,18 @@ bool error = false;
 Frame receivedFrame;
 char macOrigin[18];
 
+int clockPin;
+int txPin;
+int rxPin;
+
 void startTransmission();
+void cb(void);
+void processBit(bool level);
 
 int main(int argc, char *args[])
 {
-    if (argc >= 6) {
+    if (argc >= 6)
+    {
         memcpy(macOrigin, args[1], sizeof(macOrigin));
         memcpy(macDestiny, args[2], sizeof(macDestiny));
         clockPin = atoi(args[3]);
@@ -70,72 +69,69 @@ int main(int argc, char *args[])
         printf("Unable to start interrupt function\n");
     }
 
+    int option = 0;
     while (true)
     {
-        int option = 0;
-        while (true)
+        printMenu();
+        getOptionAndValidate(&option);
+        if (option == 1)
         {
-            printMenu();
-            getOptionAndValidate(&option);
-            if (option == 1)
-            {
-                prepareTransmissionOfTemperature(slipArrayToSend, macOrigin, macDestiny, ethernet, frame);
-                startTransmission();
-            }
-            if (option == 2)
-            {
-                prepareTransmissionOfTextMessage(slipArrayToSend, macOrigin, macDestiny, ethernet, frame);
-                startTransmission();
-            }
-            if (option == 3)
-            {
-                exit(1);
-            }
-            while (transmissionStartedSend)
-            {
-                clearScreen();
-                printf("Sending data... %d bytes\n", nbytesSend);
-                delay(1000);
-            }
-            memset(slipArrayToSend, 0, sizeof(slipArrayToSend));
+            prepareTransmissionOfTemperature(slipArrayToSend, macOrigin, macDestiny, ethernet, frame);
+            startTransmission();
+        }
+        if (option == 2)
+        {
+            prepareTransmissionOfTextMessage(slipArrayToSend, macOrigin, macDestiny, ethernet, frame);
+            startTransmission();
+        }
+        if (option == 3)
+        {
+            exit(1);
+        }
+        while (transmissionStartedSend)
+        {
+            clearScreen();
+            printf("Sending data... %d bytes\n", nbytesSend);
+            delay(1000);
+        }
+        memset(slipArrayToSend, 0, sizeof(slipArrayToSend));
 
-            while (transmissionStartedReceive)
+        while (transmissionStartedReceive)
+        {
+            clearScreen();
+            printf("Receiving data... % bytes\n", nbytesReceived);
+            delay(1000);
+        }
+        if (boolReceivedFrame)
+        {
+            error = getFrameFromTransmission(slipArrayReceived, receivedFrame);
+            if (error)
             {
-                clearScreen();
-                printf("Receiving data... % bytes\n", nbytesReceived);
-                delay(1000);
+                printf("----- AN ERROR WAS DETECTED WITH FCS ----- \n");
+                printf("-----    IGNORING COMPLETE MESSAGE   ----- \n");
+                delay(5000);
             }
-            if (boolReceivedFrame)
+            else
             {
-                error = getFrameFromTransmission(slipArrayReceived, receivedFrame);
-                if (error)
+                if (receivedFrame.cmd == 1)
                 {
-                    printf("----- AN ERROR WAS DETECTED WITH FCS ----- \n");
-                    printf("-----    IGNORING COMPLETE MESSAGE   ----- \n");
+                    printf("RECIBIDA TELEMETRIA\n");
+                    delay(5000);
+                }
+                else if (receivedFrame.cmd == 2)
+                {
+                    printf("RECIBIDO MENSAJE DE TEXTO\n");
                     delay(5000);
                 }
                 else
                 {
-                    if (receivedFrame.cmd == 1)
-                    {
-                        printf("RECIBIDA TELEMETRIA\n");
-                        delay(5000);
-                    }
-                    else if (receivedFrame.cmd == 2)
-                    {
-                        printf("RECIBIDO MENSAJE DE TEXTO\n");
-                        delay(5000);
-                    }
-                    else
-                    {
-                        printf("RECIBIDO CMD DESCONOCIDO\n");
-                        delay(5000);
-                    }
+                    printf("RECIBIDO CMD DESCONOCIDO\n");
+                    delay(5000);
                 }
-                boolReceivedFrame = false;
-                memset(slipArrayReceived, 0, sizeof(slipArrayReceived));
-                memset(&receivedFrame, 0, sizeof(receivedFrame));
             }
+            boolReceivedFrame = false;
+            memset(slipArrayReceived, 0, sizeof(slipArrayReceived));
+            memset(&receivedFrame, 0, sizeof(receivedFrame));
         }
     }
 
