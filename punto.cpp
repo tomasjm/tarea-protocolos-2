@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <wiringPi.h>
 #include "ethernet/ethernet.h"
 #include "protocol/protocol.h"
 #include "slip/slip.h"
