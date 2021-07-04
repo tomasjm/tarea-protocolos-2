@@ -39,7 +39,7 @@ Ethernet ethernet;
 //Frame frame, receivedFrame;
 
 bool waitForFrame = true;
-bool receivedFrame = false;
+bool frameReceived = false;
 
 bool transmissionStartedSend = false;
 
@@ -153,7 +153,7 @@ void processBit(bool level)
             if (slipArrayReceived[nbytesReceive] == 0xC0 && nbytesReceive > 0)
             {
                 transmissionStartedReceive = false;
-                memcpy((void *)slipFrame, (void *)bytes, nbytesReceive + 1);
+                //memcpy((void *)slipFrame, (void *)bytes, nbytesReceive + 1);
                 nbytesReceive = 0;
                 frameReceived = true;
                 return;
