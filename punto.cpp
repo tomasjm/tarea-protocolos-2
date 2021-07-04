@@ -53,13 +53,13 @@ int main(int argc, char* args[]) {
 
 void cb(void){
   if(transmissionStarted){
-    if(endCount == 0 && slipFrame[nbytes] != 0xC0){
+    if(endCount == 0 && slipArrayToSend[nbytes] != 0xC0){
       nbytes++;
       return;
     }
 
     //Escribe en el pin TX
-    digitalWrite(TX_PIN, (slipFrame[nbytes] >> nbits) & 0x01); //Bit de dato
+    digitalWrite(TX_PIN, (slipArrayToSend[nbytes] >> nbits) & 0x01); //Bit de dato
 
     //Actualiza contador de bits
     nbits++;
@@ -67,9 +67,9 @@ void cb(void){
     //Actualiza contador de bytes
     if(nbits == 8){
       nbits = 0;
-      endCount += slipFrame[nbytes] == 0xC0;
+      endCount += slipArrayToSend[nbytes] == 0xC0;
       //Finaliza la comunicación
-      if(slipFrame[nbytes] == 0xC0 && endCount>1){
+      if(slipArrayToSend[nbytes] == 0xC0 && endCount>1){
         endCount = 0;
         nbytes = 0;
         transmissionStarted = false;
