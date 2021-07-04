@@ -31,11 +31,14 @@ BYTE slipArrayReceived[MAX_TRANSFER_SIZE];
 Ethernet ethernet;
 Frame frame, receivedFrame;
 
+bool waitForFrame = true;
+
 bool transmissionStarted = false;
 typedef enum
 {
   SENDING,
-  RECEIVING
+  RECEIVING,
+  IDLE
 } TRANSMISION_TYPE;
 TRANSMISION_TYPE transmissionType = RECEIVING;
 void startTransmission();
@@ -51,21 +54,39 @@ int main(int argc, char *args[])
   {
     printf("Unable to start interrupt function\n");
   }
-
   //CONFIGURA PINES DE ENTRADA SALIDA
   pinMode(RX_PIN, INPUT);
   pinMode(TX_PIN, OUTPUT);
 
-  //EMPAQUETA EN SLIP
-  empaquetaSlip(slipArrayToSend, bytes, 10);
-  printf("Paquete slip: ");
+  while (true) {
+    if (transmissionType == IDLE) {
+      printMenu();
+    getOptionAndValidate(&option);
+    if (option == 0)
+      continue;
+    if (option == 1) {
+      empaquetaSlip(slipArrayToSend, bytes, 10);
+      startTransmission();
+    } else if (option == 3) {
+      exit(1);
+    }
+    }
+    if (transmissionType == SENDING) {
+      printf("sending data...\n");
+    }
+    if (transmissionType == RECEIVING) {
+      printf("receiving data...\n");
+      while(waitForFrame)
+        continue;
+      int len = desempaquetaSlip(data, slipFrame);
   
-  //TRANSMITE EL MENSAJE
-  startTransmission();
-  while(transmissionStarted)
-    delay(2000);
-  
-
+      printf("\nData:\n");
+      for(int i = 0; i<len; i++){
+        printf("Byte %d: %d\n", i, data[i]);
+      }
+      delay(20000);
+    }
+  }
   return 0;
 }
 
@@ -98,13 +119,13 @@ void cb(void)
           endCount = 0;
           nbytes = 0;
           transmissionStarted = false;
-          transmissionType = RECEIVING;
+          transmissionType = IDLE;
           return;
         }
         nbytes++;
       }
     }
-    else if (transmissionType == RECEIVING)
+    else if (transmissionType == IDLE || transmissionType == RECEIVING)
     {
       bool level = digitalRead(RX_PIN);
       processBit(level);
@@ -131,6 +152,7 @@ void processBit(bool level){
   //Verifica si comienza transmisión
   if(!transmissionStarted && slipArrayReceived[nbytes] == 0xC0){
     transmissionStarted = true;
+    transmissionType = RECEIVING;
     nbits = 0;
     nbytes++;
     // printf("Encuentra 0xc0\n");
@@ -144,9 +166,10 @@ void processBit(bool level){
       nbits = 0;
       if(slipArrayReceived[nbytes] == 0xC0 && nbytes>0){
         transmissionStarted = false;
-        memcpy((void*)slipFrame, (void*)bytes, nbytes+1);
+        //memcpy((void*)slipFrame, (void*)bytes, nbytes+1);
         nbytes = 0;
-        frameReceived = true;
+        transmissionType = IDLE;
+        waitForFrame = false;
         return;
       }
       nbytes++;
