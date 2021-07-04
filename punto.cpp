@@ -74,29 +74,35 @@ int main(int argc, char *args[])
     int option = 0;
     while (true)
     {
-        printMenu();
-        getOptionAndValidate(&option);
-        if (option == 1)
+        if (!(transmissionStartedSend || transmissionStartedReceive))
         {
-            prepareTransmissionOfTemperature(slipArrayToSend, macOrigin, macDestiny, ethernet, frame);
-            startTransmission();
+            printMenu();
+            getOptionAndValidate(&option);
+            if (option == 1)
+            {
+                prepareTransmissionOfTemperature(slipArrayToSend, macOrigin, macDestiny, ethernet, frame);
+                startTransmission();
+            }
+            if (option == 2)
+            {
+                prepareTransmissionOfTextMessage(slipArrayToSend, macOrigin, macDestiny, ethernet, frame);
+                startTransmission();
+            }
+            if (option == 3)
+            {
+                exit(1);
+            }
         }
-        if (option == 2)
+        if (transmissionStartedSend)
         {
-            prepareTransmissionOfTextMessage(slipArrayToSend, macOrigin, macDestiny, ethernet, frame);
-            startTransmission();
+            while (transmissionStartedSend)
+            {
+                clearScreen();
+                printf("Sending data... %d bytes\n", nbytesSend);
+                delay(1000);
+            }
+            memset(slipArrayToSend, 0, sizeof(slipArrayToSend));
         }
-        if (option == 3)
-        {
-            exit(1);
-        }
-        while (transmissionStartedSend)
-        {
-            clearScreen();
-            printf("Sending data... %d bytes\n", nbytesSend);
-            delay(1000);
-        }
-        memset(slipArrayToSend, 0, sizeof(slipArrayToSend));
 
         while (transmissionStartedReceive)
         {
@@ -225,6 +231,7 @@ void processBit(bool level)
     }
 }
 
-void startTransmission() {
-  transmissionStartedSend = true;
+void startTransmission()
+{
+    transmissionStartedSend = true;
 }

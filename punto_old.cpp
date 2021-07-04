@@ -8,141 +8,158 @@
 #include "menu/menu.h"
 #include "helpers/helpers.h"
 
-#define MAX_TRANSFER_SIZE 149
+#define MAX_TRANSFER_SIZE 300
+#define BYTE unsigned char
 
-#define CLOCK_PIN_SEND 0
-#define TX_PIN_SEND 2
-#define RX_PIN_SEND 3
-
-#define CLOCK_PIN_RECEIVE 23
-#define TX_PIN_RECEIVE 22
-#define RX_PIN_RECEIVE 21
-
-void processBit(bool level);
-void cbSend(void);
-void cbReceive(void);
-
-volatile int nbitsSend, nbitsReceive = 0;
-volatile int nbytes = 0;
-int endCount = 0;
-BYTE bytes[10] = {1,2,3,4,5,6,7,8,9,10};
-
-char MAC_ADDRESS[18] = "b8:27:eb:15:b1:ca";
-char MAC_ADDRESS2[18] = "11:27:bb:44:b1:ca";
-
+// GLOBAL VARS FOR SENDING PURPOSES
+volatile int nbitsSend = 0;
+BYTE bytesToSend[10] = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
 BYTE slipArrayToSend[MAX_TRANSFER_SIZE];
-BYTE slipArrayReceived[MAX_TRANSFER_SIZE];
-
-Ethernet ethernet;
-Frame frame, receivedFrame;
-
-bool waitForFrame = true;
-
+volatile int nbytesSend = 0;
+BYTE len = 10;
+int nones = 0;
 bool transmissionStartedSend = false;
+int endCount = 0;
+Ethernet ethernet;
+Frame frame;
 
+char macDestiny[18];
+
+// GLOBAL VARS FOR RECEIVING PURPOSES
+volatile int nbitsReceived = 0;
+volatile int nbytesReceived = 0;
 bool transmissionStartedReceive = false;
-typedef enum
-{
-  SENDING,
-  RECEIVING,
-  IDLE
-} TRANSMISION_TYPE;
+bool boolReceivedFrame = false;
+BYTE bytesReceived[MAX_TRANSFER_SIZE];
+BYTE slipArrayReceived[MAX_TRANSFER_SIZE];
+bool error = false;
+Frame receivedFrame;
+char macOrigin[18];
 
-TRANSMISION_TYPE transmissionType = IDLE;
+int clockPin;
+int txPin;
+int rxPin;
 
 void startTransmission();
+void cb(void);
+void processBit(bool level);
 
 int main(int argc, char *args[])
 {
-  if (wiringPiSetup() == -1)
+    if (argc >= 6)
     {
-        printf("No fue posible iniciar wiring pi\n");
+        memcpy(macOrigin, args[1], sizeof(macOrigin));
+        memcpy(macDestiny, args[2], sizeof(macDestiny));
+        clockPin = atoi(args[3]);
+        txPin = atoi(args[4]);
+        rxPin = atoi(args[5]);
+    }
+    if (wiringPiSetup() == -1)
+    {
+        printf("Error initializing wiring pi\n");
         exit(1);
     }
-    piHiPri(99);
-    //CONFIGURA PINES DE ENTRADA SALIDA
+    //pin config
+    pinMode(rxPin, INPUT);
+    pinMode(txPin, OUTPUT);
+    printf("Pines clock: %d | tx: %d | rx: %d\n", clockPin, txPin, rxPin);
+    delay(5000);
 
-    //CONFIGURA INTERRUPCION PIN CLOCK (PUENTEADO A PIN PWM)
-    if (wiringPiISR(CLOCK_PIN_RECEIVE, INT_EDGE_FALLING, &cbReceive) < 0)
+    // CONFIGURE INTERRUPT FOR SENDING AND RECEIVING DATA
+    if (wiringPiISR(clockPin, INT_EDGE_BOTH, &cb) < 0)
     {
         printf("Unable to start interrupt function\n");
     }
 
-    if (wiringPiISR(CLOCK_PIN_SEND, INT_EDGE_RISING, &cbSend) < 0)
+    int option = 0;
+    while (true)
     {
-        printf("Unable to start interrupt function\n");
-    }
-
-    pinMode(RX_PIN_RECEIVE, INPUT);
-    pinMode(TX_PIN_RECEIVE, OUTPUT);
-
-    pinMode(RX_PIN_SEND, INPUT);
-    pinMode(TX_PIN_SEND, OUTPUT);
-
-  
-  return 0;
-}
-void cbReceive(void)
-{
-    bool level = digitalRead(RX_PIN_RECEIVE);
-    processBit(level);
-}
-
-void processBit(bool level)
-{
-    //Inserta nuevo bit en byte actual
-    BYTE pos = nbitsReceive;
-    if (nbitsReceive > 7)
-    {
-        pos = 7;
-        slipArrayReceived[nbytes] = slipArrayReceived[nbytes] >> 1;
-        slipArrayReceived[nbytes] &= 0x7f;
-    }
-    slipArrayReceived[nbytes] |= level << pos;
-
-    //Verifica si comienza transmisión
-    if (!transmissionStartedReceive && slipArrayReceived[nbytes] == 0xC0)
-    {
-        transmissionStartedReceive = true;
-        nbitsReceive = 0;
-        nbytes++;
-        // printf("Encuentra 0xc0\n");
-        return;
-    }
-
-    //Actualiza contadores y banderas
-    nbitsReceive++;
-    if (transmissionStartedReceive)
-    {
-        if (nbitsReceive == 8)
+        if (!(transmissionStartedSend || transmissionStartedReceive))
         {
-            nbitsReceive = 0;
-            // printf("0x%x\n", slipArrayReceived[nbytes]);
-            if (slipArrayReceived[nbytes] == 0xC0 && nbytes > 0)
+            printMenu();
+            getOptionAndValidate(&option);
+            if (option == 1)
             {
-                transmissionStartedReceive = false;
-                memcpy((void *)slipFrame, (void *)bytes, nbytes + 1);
-                nbytes = 0;
-                frameReceived = true;
-                return;
+                prepareTransmissionOfTemperature(slipArrayToSend, macOrigin, macDestiny, ethernet, frame);
+                startTransmission();
             }
-            nbytes++;
+            if (option == 2)
+            {
+                prepareTransmissionOfTextMessage(slipArrayToSend, macOrigin, macDestiny, ethernet, frame);
+                startTransmission();
+            }
+            if (option == 3)
+            {
+                exit(1);
+            }
+        }
+        if (transmissionStartedSend)
+        {
+            while (transmissionStartedSend)
+            {
+                clearScreen();
+                printf("Sending data... %d bytes\n", nbytesSend);
+                delay(1000);
+            }
+            memset(slipArrayToSend, 0, sizeof(slipArrayToSend));
+        }
+
+        while (transmissionStartedReceive)
+        {
+            clearScreen();
+            printf("Receiving data... % bytes\n", nbytesReceived);
+            delay(1000);
+        }
+        if (boolReceivedFrame)
+        {
+            error = getFrameFromTransmission(slipArrayReceived, receivedFrame);
+            if (error)
+            {
+                printf("----- AN ERROR WAS DETECTED WITH FCS ----- \n");
+                printf("-----    IGNORING COMPLETE MESSAGE   ----- \n");
+                delay(5000);
+            }
+            else
+            {
+                if (receivedFrame.cmd == 1)
+                {
+                    printf("RECIBIDA TELEMETRIA\n");
+                    delay(5000);
+                }
+                else if (receivedFrame.cmd == 2)
+                {
+                    printf("RECIBIDO MENSAJE DE TEXTO\n");
+                    delay(5000);
+                }
+                else
+                {
+                    printf("RECIBIDO CMD DESCONOCIDO\n");
+                    delay(5000);
+                }
+            }
+            boolReceivedFrame = false;
+            memset(slipArrayReceived, 0, sizeof(slipArrayReceived));
+            memset(&receivedFrame, 0, sizeof(receivedFrame));
         }
     }
+
+    return 0;
 }
 
-void cbSend(void)
+void cb(void)
 {
+    bool level = digitalRead(rxPin);
+    processBit(level);
     if (transmissionStartedSend)
     {
-        if (endCount == 0 && slipArrayToSend[nbytes] != 0xC0)
+        if (endCount == 0 && slipArrayToSend[nbytesSend] != 0xC0)
         {
-            nbytes++;
+            nbytesSend++;
             return;
         }
 
         //Escribe en el pin TX
-        digitalWrite(TX_PIN_SEND, (slipArrayToSend[nbytes] >> nbitsSend) & 0x01); //Bit de dato
+        digitalWrite(txPin, (slipArrayToSend[nbytesSend] >> nbitsSend) & 0x01); //Bit de dato
 
         //Actualiza contador de bits
         nbitsSend++;
@@ -151,35 +168,70 @@ void cbSend(void)
         if (nbitsSend == 8)
         {
             nbitsSend = 0;
-            endCount += slipArrayToSend[nbytes] == 0xC0;
+            endCount += slipArrayToSend[nbytesSend] == 0xC0;
             //Finaliza la comunicación
-            if (slipArrayToSend[nbytes] == 0xC0 && endCount > 1)
+            if (slipArrayToSend[nbytesSend] == 0xC0 && endCount > 1)
             {
                 endCount = 0;
-                nbytes = 0;
+                nbytesSend = 0;
                 transmissionStartedSend = false;
                 return;
             }
-            nbytes++;
+            nbytesSend++;
         }
     }
     else
     {
         //Canal en reposo
-        digitalWrite(TX_PIN_SEND, 1);
+        digitalWrite(txPin, 1);
+    }
+}
+
+void processBit(bool level)
+{
+
+    //Inserta nuevo bit en byte actual
+    BYTE pos = nbitsReceived;
+    if (nbitsReceived > 7)
+    {
+        pos = 7;
+        bytesReceived[nbytesReceived] = bytesReceived[nbytesReceived] >> 1;
+        bytesReceived[nbytesReceived] &= 0x7f;
+    }
+    bytesReceived[nbytesReceived] |= level << pos;
+
+    //Verifica si comienza transmisión
+    if (!transmissionStartedReceive && bytesReceived[nbytesReceived] == 0xC0)
+    {
+        transmissionStartedReceive = true;
+        nbitsReceived = 0;
+        nbytesReceived++;
+        // printf("Encuentra 0xc0\n");
+        return;
+    }
+
+    //Actualiza contadores y banderas
+    nbitsReceived++;
+    if (transmissionStartedReceive)
+    {
+        if (nbitsReceived == 8)
+        {
+            nbitsReceived = 0;
+            // printf("0x%x\n", bytesReceived[nbytesReceived]);
+            if (bytesReceived[nbytesReceived] == 0xC0 && nbytesReceived > 0)
+            {
+                transmissionStartedReceive = false;
+                memcpy((void *)slipArrayReceived, (void *)bytesReceived, nbytesReceived + 1);
+                nbytesReceived = 0;
+                boolReceivedFrame = true;
+                return;
+            }
+            nbytesReceived++;
+        }
     }
 }
 
 void startTransmission()
 {
     transmissionStartedSend = true;
-}
-
-void printByteArray(BYTE *arr, int len)
-{
-    for (int i = 0; i < len; i++)
-    {
-        printf("0x%x ", arr[i]);
-    }
-    printf("\n");
 }
