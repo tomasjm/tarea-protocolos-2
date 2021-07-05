@@ -76,11 +76,11 @@ int main(int argc, char *args[])
     int option = 0;
     while (true)
     {
-        if (!(transmissionStartedSend || transmissionStartedReceive || boolReceivedFrame))
+        if (!(transmissionStartedSend || transmissionStartedReceive))
         {
             printMenu();
             struct pollfd mypoll = {STDIN_FILENO, POLLIN | POLLPRI};
-            if (poll(&mypoll, 1, 5000))
+            if (poll(&mypoll, 1, 3000))
             {
                 scanf("%d", &option);
             }
@@ -93,12 +93,12 @@ int main(int argc, char *args[])
                 prepareTransmissionOfTemperature(slipArrayToSend, macOrigin, macDestiny, ethernet, frame);
                 startTransmission();
             }
-            else if (option == 2)
+            if (option == 2)
             {
                 prepareTransmissionOfTextMessage(slipArrayToSend, macOrigin, macDestiny, ethernet, frame);
                 startTransmission();
             }
-            else if (option == 3)
+            if (option == 3)
             {
                 exit(1);
             }
@@ -117,13 +117,14 @@ int main(int argc, char *args[])
         while (transmissionStartedReceive)
         {
             clearScreen();
-            printf("Receiving data... %d\n", nbytesReceived);
+            printf("Receiving data... % bytes\n", nbytesReceived);
             delay(1000);
         }
         if (boolReceivedFrame)
         {
-            error = getFrameFromTransmission(slipArrayReceived, receivedFrame);
+            printByteArray(slipArrayReceived, sizeof(slipArrayReceived));
             delay(1000);
+            error = getFrameFromTransmission(slipArrayReceived, receivedFrame);
             if (error)
             {
                 printf("----- AN ERROR WAS DETECTED WITH FCS ----- \n");
@@ -132,12 +133,13 @@ int main(int argc, char *args[])
             }
             else
             {
+                printf("CMD: %d\n", receivedFrame.cmd);
                 if (receivedFrame.cmd == 1)
                 {
                     int temp = 0;
                     int timestamp = 0;
-                    getValuesFromTemperatureFrame(receivedFrame, &temp, &timestamp);
-                    printf("----- TELEMETRY RECEIVED -----\n");
+                    getValuesFromTemperatureFrame(receivedFrame, &temp, &timestamp)
+                    printf("----- RECEIVED TELEMETRY ----- \n");
                     printf("Temperature: %d \n", temp);
                     printf("Timestamp: %d \n", timestamp);
                     delay(5000);
@@ -146,21 +148,17 @@ int main(int argc, char *args[])
                 {
                     char msg[30];
                     getMessageFromTextMessageFrame(receivedFrame, msg);
-                    printf("----- TEXT MESSAGE RECEIVED -----\n");
-                    printf("Message: %s \n", msg);
+                    printf("----- RECEIVED TEXT MESSAGE ----- \n");
+                    printf("Text message: %s \n", msg);
                     delay(5000);
                 }
                 else
                 {
-                    printf("We have received an unknown CMD value, probably an error...\n");
+                    printf("Received an unknown cmd, probably an error...\n");
                     delay(5000);
                 }
             }
             boolReceivedFrame = false;
-            for (int i = 0; i < 50; i++)
-            {
-                bytesReceived[i] = 0;
-            }
             memset(slipArrayReceived, 0, sizeof(slipArrayReceived));
             memset(&receivedFrame, 0, sizeof(receivedFrame));
         }
@@ -198,7 +196,6 @@ void cb(void)
                 endCount = 0;
                 nbytesSend = 0;
                 transmissionStartedSend = false;
-                memset(slipArrayToSend, 0, sizeof(slipArrayToSend));
                 return;
             }
             nbytesSend++;
