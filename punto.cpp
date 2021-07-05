@@ -1,3 +1,10 @@
+/*
+    Group:
+    - Tomás Jiménez
+    - Kevin Herrera
+    Who coded:
+    - Tomás Jiménez
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
