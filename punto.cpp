@@ -137,15 +137,21 @@ int main(int argc, char *args[])
             delay(1000);
             // function returns an FCS error if it exists, also get the communication frame from a slip array
             error = getFrameFromTransmission(slipArrayReceived, receivedFrame, receivedEthernet);
+            bool isForMe = compareMacAddress(receivedEthernet.destiny, macOrigin);
             if (error)
             {
                 printf("----- AN ERROR WAS DETECTED WITH FCS ----- \n");
                 printf("-----    IGNORING COMPLETE MESSAGE   ----- \n");
                 delay(5000);
             }
-            else
+            // check for if destiny mac address equals to local mac address
+            else if (!isForMe) {
+                printf("----- MESSAGE WASN'T FOR THIS MAC ADDRESS ----- \n");
+                printf("-----    IGNORING COMPLETE MESSAGE   ----- \n");
+                delay(5000);
+            } else
             {
-                printf("mac address: %s | %s \n", receivedEthernet.source, receivedEthernet.destiny);
+                
                 // if cmd = 1, is a telemetry data
                 if (receivedFrame.cmd == 1)
                 {

@@ -52,8 +52,6 @@ void printMacAddress(BYTE* mac) {
 }
 
 bool compareMacAddress(BYTE* mac1, BYTE* mac2){
-  printMacAddress(mac1);
-  printMacAddress(mac2);
 	for (int i=0;i<6;i++){
 		if(mac1[i]!=mac2[i]){
 			return false;
