@@ -1,7 +1,7 @@
 #include "slip.h"
 #include <stdio.h>
 
-void empaquetaSlip(BYTE *dst, BYTE *src, int len){
+void packSlip(BYTE *dst, BYTE *src, int len){
   int j = 0;
   dst[j] = 0xC0;
   j++;
@@ -23,7 +23,7 @@ void empaquetaSlip(BYTE *dst, BYTE *src, int len){
   dst[j] = 0xC0;
 }
 
-int desempaquetaSlip(BYTE *dst, BYTE * src){
+int unpackSlip(BYTE *dst, BYTE * src){
   int i = 0, j=0;
   while(src[i] != 0xC0)
     i++;

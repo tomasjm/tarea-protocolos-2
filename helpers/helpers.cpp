@@ -52,7 +52,7 @@ void prepareTransmissionOfTemperature(BYTE slipArray[], char strMacSource[18], c
   }
   generateRawFrame(f, 1, 0, 8, dataFrameToSend);
   generateRawEthernet(ethf, f, strMacSource, strMacDestiny);
-  empaquetaSlip(slipArray, ethf.frame, 28);
+  packSlip(slipArray, ethf.frame, 28);
 }
 
 void prepareTransmissionOfTextMessage(BYTE slipArray[], char strMacSource[18], char strMacDestiny[18], Ethernet &ethf, Frame &f) {
@@ -61,7 +61,7 @@ void prepareTransmissionOfTextMessage(BYTE slipArray[], char strMacSource[18], c
   getTextMessage((char*)msg, 30);
   generateRawFrame(f, 2, 0, 30, msg);
   generateRawEthernet(ethf, f, strMacSource, strMacDestiny);
-  empaquetaSlip(slipArray, ethf.frame, 50);
+  packSlip(slipArray, ethf.frame, 50);
 }
 
 void getTextMessage(char msg[], int length) {
@@ -107,7 +107,7 @@ void generateRawFrame(Frame &f, int cmd, int sa, int length, BYTE data[]) {
 }
 
 bool getFrameFromTransmission(BYTE slipArray[], Frame &f, Ethernet &ef) {
-  int n = desempaquetaSlip(ef.frame, slipArray);
+  int n = unpackSlip(ef.frame, slipArray);
   bool error = unpackEthernet(ef);
   if (error) {
     printf("error\n");

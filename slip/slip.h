@@ -1,6 +1,6 @@
 #ifndef SLIP_H
 #define SLIP_H
 #define BYTE unsigned char
-void empaquetaSlip(BYTE* dst, BYTE *src, int len);
-int desempaquetaSlip(BYTE* dst, BYTE *src);
+void packSlip(BYTE* dst, BYTE *src, int len);
+int unpackSlip(BYTE* dst, BYTE *src);
 #endif
