@@ -49,6 +49,7 @@ void processBit(bool level);
 
 int main(int argc, char *args[])
 {
+    // Check for ARGS: macOrigin macDestiny clockPin txPin rxPin
     if (argc >= 6)
     {
         memcpy(macOrigin, args[1], sizeof(macOrigin));
@@ -57,6 +58,7 @@ int main(int argc, char *args[])
         txPin = atoi(args[4]);
         rxPin = atoi(args[5]);
     }
+    // Setup wiring pi
     if (wiringPiSetup() == -1)
     {
         printf("Error initializing wiring pi\n");
@@ -65,7 +67,7 @@ int main(int argc, char *args[])
     //pin config
     pinMode(rxPin, INPUT);
     pinMode(txPin, OUTPUT);
-    printf("Pines clock: %d | tx: %d | rx: %d\n", clockPin, txPin, rxPin);
+    printf("Pins: clock: %d | tx: %d | rx: %d\n", clockPin, txPin, rxPin);
     delay(5000);
 
     // CONFIGURE INTERRUPT FOR SENDING AND RECEIVING DATA
@@ -75,10 +77,14 @@ int main(int argc, char *args[])
     }
 
     int option = 0;
+    // Main LOOP
     while (true)
     {
+        // if there is any transmission it wont print menu
         if (!(transmissionStartedSend || transmissionStartedReceive))
         {
+            // prints menu and waits for a response with a timeout of 3s
+            // timeout is in a loop, it purporse is to check if there is a transmission active ignoring pause of scanf
             printMenu();
             struct pollfd mypoll = {STDIN_FILENO, POLLIN | POLLPRI};
             if (poll(&mypoll, 1, 3000))
@@ -91,11 +97,13 @@ int main(int argc, char *args[])
             }
             if (option == 1)
             {
+                // Prepares an SlipArray with Telemetry data and starts the transmission
                 prepareTransmissionOfTemperature(slipArrayToSend, macOrigin, macDestiny, ethernet, frame);
                 startTransmission();
             }
             if (option == 2)
             {
+                // Prepares an SlipArray with a TextMessage data and starts the transmission
                 prepareTransmissionOfTextMessage(slipArrayToSend, macOrigin, macDestiny, ethernet, frame);
                 startTransmission();
             }
@@ -112,19 +120,22 @@ int main(int argc, char *args[])
                 printf("Sending data... %d bytes\n", nbytesSend);
                 delay(1000);
             }
+            // RESET ARRAY TO SEND
             memset(slipArrayToSend, 0, sizeof(slipArrayToSend));
         }
 
         while (transmissionStartedReceive)
         {
             clearScreen();
-            printf("Receiving data... % bytes\n", nbytesReceived);
+            printf("Receiving data... %d bytes\n", nbytesReceived);
             delay(1000);
         }
+        // if we have received a transmission frame
         if (boolReceivedFrame)
         {
-            printByteArray(slipArrayReceived, sizeof(slipArrayReceived));
+            //printByteArray(slipArrayReceived, sizeof(slipArrayReceived));
             delay(1000);
+            // function returns an FCS error if it exists, also get the communication frame from a slip array
             error = getFrameFromTransmission(slipArrayReceived, receivedFrame, receivedEthernet);
             if (error)
             {
@@ -134,20 +145,24 @@ int main(int argc, char *args[])
             }
             else
             {
-                printf("CMD: %d\n", receivedFrame.cmd);
+                printf("mac address: %s | %s \n", receivedEthernet.source, receivedEthernet.destiny);
+                // if cmd = 1, is a telemetry data
                 if (receivedFrame.cmd == 1)
                 {
                     int temp = 0;
                     int timestamp = 0;
+                    // Gets telemetry data from a frame with cmd = 1
                     getValuesFromTemperatureFrame(receivedFrame, &temp, &timestamp);
                     printf("----- RECEIVED TELEMETRY ----- \n");
-                    printf("Temperature: %d \n", temp);
+                    printf("Temperature: %.2f \n", ((float)temp-10000)/1000);
                     printf("Timestamp: %d \n", timestamp);
                     delay(5000);
                 }
+                // if cmd = 2, is a text message
                 else if (receivedFrame.cmd == 2)
                 {
                     char msg[30];
+                    // Gets a text message data from a frame with cmd = 2
                     getMessageFromTextMessageFrame(receivedFrame, msg);
                     printf("----- RECEIVED TEXT MESSAGE ----- \n");
                     printf("Text message: %s \n", msg);
@@ -155,10 +170,12 @@ int main(int argc, char *args[])
                 }
                 else
                 {
+                    // if cmd has another value, probably is an undetected error
                     printf("Received an unknown cmd, probably an error...\n");
                     delay(5000);
                 }
             }
+            // resets received variables for a new transmission
             boolReceivedFrame = false;
             memset(&receivedFrame, 0, sizeof(receivedFrame));
             memset(&receivedEthernet, 0, sizeof(receivedEthernet));
@@ -180,18 +197,18 @@ void cb(void)
             return;
         }
 
-        //Escribe en el pin TX
-        digitalWrite(txPin, (slipArrayToSend[nbytesSend] >> nbitsSend) & 0x01); //Bit de dato
+        // Writes on TX Pin
+        digitalWrite(txPin, (slipArrayToSend[nbytesSend] >> nbitsSend) & 0x01);
 
-        //Actualiza contador de bits
+        // Update bit counter
         nbitsSend++;
 
-        //Actualiza contador de bytes
+        // Update byte counter
         if (nbitsSend == 8)
         {
             nbitsSend = 0;
             endCount += slipArrayToSend[nbytesSend] == 0xC0;
-            //Finaliza la comunicación
+            // Finish transmission
             if (slipArrayToSend[nbytesSend] == 0xC0 && endCount > 1)
             {
                 endCount = 0;
@@ -204,7 +221,7 @@ void cb(void)
     }
     else
     {
-        //Canal en reposo
+        // Channel idle
         digitalWrite(txPin, 1);
     }
 }
@@ -212,7 +229,7 @@ void cb(void)
 void processBit(bool level)
 {
 
-    //Inserta nuevo bit en byte actual
+    //Insert a bit in actual byte
     BYTE pos = nbitsReceived;
     if (nbitsReceived > 7)
     {
@@ -222,17 +239,16 @@ void processBit(bool level)
     }
     bytesReceived[nbytesReceived] |= level << pos;
 
-    //Verifica si comienza transmisión
+    //Verify if transmission has started
     if (!transmissionStartedReceive && bytesReceived[nbytesReceived] == 0xC0)
     {
         transmissionStartedReceive = true;
         nbitsReceived = 0;
         nbytesReceived++;
-        // printf("Encuentra 0xc0\n");
         return;
     }
 
-    //Actualiza contadores y banderas
+    // update counters and flags
     nbitsReceived++;
     if (transmissionStartedReceive)
     {
