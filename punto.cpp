@@ -76,11 +76,11 @@ int main(int argc, char *args[])
     int option = 0;
     while (true)
     {
-        if (!(transmissionStartedSend || transmissionStartedReceive))
+        if (!(transmissionStartedSend || transmissionStartedReceive || boolReceivedFrame))
         {
             printMenu();
             struct pollfd mypoll = {STDIN_FILENO, POLLIN | POLLPRI};
-            if (poll(&mypoll, 1, 2000))
+            if (poll(&mypoll, 1, 5000))
             {
                 scanf("%d", &option);
             }
@@ -111,7 +111,7 @@ int main(int argc, char *args[])
                 printf("Sending data... %d bytes\n", nbytesSend);
                 delay(1000);
             }
-            memset(slipArrayToSend, 0, sizeof(slipArrayToSend));
+            
         }
 
         while (transmissionStartedReceive)
@@ -197,6 +197,7 @@ void cb(void)
                 endCount = 0;
                 nbytesSend = 0;
                 transmissionStartedSend = false;
+                memset(slipArrayToSend, 0, sizeof(slipArrayToSend));
                 return;
             }
             nbytesSend++;
