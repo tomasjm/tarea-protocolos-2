@@ -57,6 +57,17 @@ int main(int argc, char *args[])
         clockPin = atoi(args[3]);
         txPin = atoi(args[4]);
         rxPin = atoi(args[5]);
+    } else {
+        printf("Please enter OriginMacAddress, DestinyMacAddress, ClockPin, TxPin and RxPin in the following format:\n");
+        printf("mac1 mac2 clockpin txpin rxpin\n");
+        printf("ex: b8:27:eb:15:b1:ca 11:27:bb:44:b1:ca 0 2 3\n");
+        char* cclockPin;
+        char* ctxPin;
+        char* crxPin;
+        scanf("%s %s %s %s %s", macOrigin, macDestiny, cclockPin, ctxPin, crxPin);
+        clockPin = atoi(cclockPin);
+        txPin = atoi(ctxPin);
+        rxPin = atoi(crxPin);
     }
     // Setup wiring pi
     if (wiringPiSetup() == -1)
