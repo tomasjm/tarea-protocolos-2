@@ -80,7 +80,7 @@ int main(int argc, char *args[])
         {
             printMenu();
             struct pollfd mypoll = {STDIN_FILENO, POLLIN | POLLPRI};
-            if (poll(&mypoll, 1, 1000))
+            if (poll(&mypoll, 1, 2000))
             {
                 scanf("%d", &option);
             }
