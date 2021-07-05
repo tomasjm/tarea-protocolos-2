@@ -184,9 +184,10 @@ int main(int argc, char *args[])
                 }
             }
             // resets received variables for a new transmission
+            // transmissionStartedReceive = false;
             boolReceivedFrame = false;
-            memset(&receivedFrame, 0, sizeof(receivedFrame));
-            memset(&receivedEthernet, 0, sizeof(receivedEthernet));
+            // memset(&receivedFrame, 0, sizeof(receivedFrame));
+            // memset(&receivedEthernet, 0, sizeof(receivedEthernet));
         }
     }
 
