@@ -125,7 +125,7 @@ int main(int argc, char *args[])
         {
             printByteArray(slipArrayReceived, sizeof(slipArrayReceived));
             delay(1000);
-            error = getFrameFromTransmission(slipArrayReceived, receivedFrame);
+            error = getFrameFromTransmission(slipArrayReceived, receivedFrame, receivedEthernet);
             if (error)
             {
                 printf("----- AN ERROR WAS DETECTED WITH FCS ----- \n");
