@@ -13,21 +13,15 @@ void cDelay(int milliSeconds) {
 }
 
 void readSensorData(int q, int valuesArr[], int timesArr[]) {
-  // FILE *fp;
-  // int rawTemp;
-  // for (int i = 0; i<q; i++) {
-  // fp = popen("cat /sys/bus/w1/devices/28-0113126a6baa/w1_slave | grep -i -o \"t=[0-9]*\" | grep -o \"[0-9]*\"", "r");
-  // fscanf(fp, "%d", &rawTemp);
-  // valuesArr[i] = rawTemp+10000;
-  // timesArr[i] = time(NULL);
-  // printf("Got %d temperature values of %d\n", i+1, q);
-  // printf("Raw temperature value %d\n", rawTemp);
-  // pclose(fp);
-  // }
-  valuesArr[0] = 999;
+  FILE *fp;
+  int rawTemp;
+
+  fp = popen("cat /sys/bus/w1/devices/28-0113126a6baa/w1_slave | grep -i -o \"t=[0-9]*\" | grep -o \"[0-9]*\"", "r");
+  fscanf(fp, "%d", &rawTemp);
+  valuesArr[0] = rawTemp+10000;
   timesArr[0] = time(NULL);
-  printf("Raw temperature value %d\n", valuesArr[0]);
-  printf("Raw timestamp value %d\n", timesArr[0]);
+  pclose(fp);
+  
 }
 
 void getByteArrayOfInteger(int v, BYTE arr[]) {
