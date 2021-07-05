@@ -189,6 +189,7 @@ int main(int argc, char *args[])
             // memset(&receivedFrame, 0, sizeof(receivedFrame));
             // memset(&receivedEthernet, 0, sizeof(receivedEthernet));
         }
+        delay(1000);
     }
 
     return 0;
