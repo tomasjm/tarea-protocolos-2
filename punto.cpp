@@ -118,7 +118,7 @@ int main(int argc, char *args[])
         {
             clearScreen();
             printf("Receiving data... %d\n", nbytesReceived);
-            delay(100);
+            delay(1000);
         }
         if (boolReceivedFrame)
         {
@@ -156,8 +156,11 @@ int main(int argc, char *args[])
                 }
             }
             boolReceivedFrame = false;
+            for (int i = 0; i < 50; i++)
+            {
+                bytesReceived[i] = 0;
+            }
             memset(slipArrayReceived, 0, sizeof(slipArrayReceived));
-            memset(bytesReceived, 0, sizeof(bytesReceived));
             memset(&receivedFrame, 0, sizeof(receivedFrame));
         }
     }
