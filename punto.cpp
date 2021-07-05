@@ -80,7 +80,7 @@ int main(int argc, char *args[])
         {
             printMenu();
             struct pollfd mypoll = {STDIN_FILENO, POLLIN | POLLPRI};
-            if (poll(&mypoll, 1, 3000))
+            if (poll(&mypoll, 1, 1000))
             {
                 scanf("%d", &option);
             }
@@ -118,11 +118,10 @@ int main(int argc, char *args[])
         {
             clearScreen();
             printf("Receiving data... %d\n", nbytesReceived);
-            delay(1000);
+            delay(100);
         }
         if (boolReceivedFrame)
         {
-            delay(10000);
             error = getFrameFromTransmission(slipArrayReceived, receivedFrame);
             if (error)
             {
@@ -158,6 +157,7 @@ int main(int argc, char *args[])
             }
             boolReceivedFrame = false;
             memset(slipArrayReceived, 0, sizeof(slipArrayReceived));
+            memset(bytesReceived, 0, sizeof(bytesReceived));
             memset(&receivedFrame, 0, sizeof(receivedFrame));
         }
     }
