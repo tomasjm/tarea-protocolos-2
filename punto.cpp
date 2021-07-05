@@ -36,6 +36,7 @@ BYTE bytesReceived[MAX_TRANSFER_SIZE];
 BYTE slipArrayReceived[MAX_TRANSFER_SIZE];
 bool error = false;
 Frame receivedFrame;
+Ethernet receivedEthernet;
 char macOrigin[18];
 
 int clockPin;
@@ -159,8 +160,12 @@ int main(int argc, char *args[])
                 }
             }
             boolReceivedFrame = false;
-            memset(slipArrayReceived, 0, sizeof(slipArrayReceived));
+            for (int i = 0; i<MAX_TRANSFER_SIZE; i++) {
+                bytesReceived[i] = 0;
+                slipArrayReceived[i] = 0;
+            }
             memset(&receivedFrame, 0, sizeof(receivedFrame));
+            memset(&receivedEthernet, 0, sizeof(receivedEthernet));
         }
     }
 
