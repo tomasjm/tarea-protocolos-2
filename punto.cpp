@@ -160,10 +160,6 @@ int main(int argc, char *args[])
                 }
             }
             boolReceivedFrame = false;
-            for (int i = 0; i<MAX_TRANSFER_SIZE; i++) {
-                bytesReceived[i] = 0;
-                slipArrayReceived[i] = 0;
-            }
             memset(&receivedFrame, 0, sizeof(receivedFrame));
             memset(&receivedEthernet, 0, sizeof(receivedEthernet));
         }
@@ -243,11 +239,11 @@ void processBit(bool level)
         if (nbitsReceived == 8)
         {
             nbitsReceived = 0;
-            // printf("0x%x\n", bytesReceived[nbytesReceived]);
             if (bytesReceived[nbytesReceived] == 0xC0 && nbytesReceived > 0)
             {
                 transmissionStartedReceive = false;
                 memcpy((void *)slipArrayReceived, (void *)bytesReceived, nbytesReceived + 1);
+                memset(bytesReceived, 0, sizeof(bytesReceived));
                 nbytesReceived = 0;
                 boolReceivedFrame = true;
                 return;
