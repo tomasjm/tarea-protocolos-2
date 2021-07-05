@@ -93,12 +93,12 @@ int main(int argc, char *args[])
                 prepareTransmissionOfTemperature(slipArrayToSend, macOrigin, macDestiny, ethernet, frame);
                 startTransmission();
             }
-            if (option == 2)
+            else if (option == 2)
             {
                 prepareTransmissionOfTextMessage(slipArrayToSend, macOrigin, macDestiny, ethernet, frame);
                 startTransmission();
             }
-            if (option == 3)
+            else if (option == 3)
             {
                 exit(1);
             }
@@ -111,7 +111,7 @@ int main(int argc, char *args[])
                 printf("Sending data... %d bytes\n", nbytesSend);
                 delay(1000);
             }
-            
+            memset(slipArrayToSend, 0, sizeof(slipArrayToSend));
         }
 
         while (transmissionStartedReceive)
@@ -123,6 +123,7 @@ int main(int argc, char *args[])
         if (boolReceivedFrame)
         {
             error = getFrameFromTransmission(slipArrayReceived, receivedFrame);
+            delay(1000);
             if (error)
             {
                 printf("----- AN ERROR WAS DETECTED WITH FCS ----- \n");
