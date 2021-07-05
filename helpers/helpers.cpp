@@ -113,7 +113,7 @@ bool getFrameFromTransmission(BYTE slipArray[], Frame &f, Ethernet &ef) {
     printf("error\n");
     return true;
   }
-  printByteArray(ef.data, 34);
+  //printByteArray(ef.data, 34);
   memcpy(f.frame, ef.data, sizeof(f.frame));
   generateReceivedFrame(f);
   return false;

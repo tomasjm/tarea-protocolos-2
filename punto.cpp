@@ -137,7 +137,9 @@ int main(int argc, char *args[])
             delay(1000);
             // function returns an FCS error if it exists, also get the communication frame from a slip array
             error = getFrameFromTransmission(slipArrayReceived, receivedFrame, receivedEthernet);
-            bool isForMe = compareMacAddress(receivedEthernet.destiny, macOrigin);
+            BYTE byteMacOrigin[6];
+            convertMacAddressToByteArray(macOrigin, byteMacOrigin);
+            bool isForMe = compareMacAddress(receivedEthernet.destiny, byteMacOrigin);
             if (error)
             {
                 printf("----- AN ERROR WAS DETECTED WITH FCS ----- \n");
